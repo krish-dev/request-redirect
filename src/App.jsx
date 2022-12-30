@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect } from 'react'
 import Box from '@mui/material/Box'
 import Paper from '@mui/material/Paper'
 import Grid from '@mui/material/Grid'
@@ -12,25 +12,42 @@ import AddRule from './components/AddRule'
 import { useLocalStorage } from './hooks/storage'
 
 function App() {
-  const [checked, setChecked] = useState(false)
   const [rules, setRules] = useLocalStorage('rules', [])
 
-  const handleChange = (event) => {
-    // chrome.runtime.sendMessage({type: 'request_proxy:control', data: event.target.checked});
-    setChecked(event.target.checked)
+  useEffect(() => {
+    chrome.runtime.sendMessage({ type: 'request_redirect:rules:updated', data: rules })
+  }, [rules])
+
+  const findIndex = (id) => {
+    return rules.findIndex((x) => x.id === id)
+  }
+
+  const delRuleByIndex = (index) => {
+    const exRules = [...rules]
+    exRules.splice(index, 1)
+    setRules(exRules)
   }
 
   const delCell = (params) => {
+    const handleClick = () => {
+      delRuleByIndex(findIndex(params.row.id))
+    }
     return (
-      <IconButton aria-label="delete">
+      <IconButton aria-label="delete" onClick={handleClick}>
         <DeleteIcon />
       </IconButton>
     )
   }
 
+  const updateActiveByIndex = (index) => {
+    const exRules = [...rules]
+    exRules[index].isActive = !exRules[index].isActive
+    setRules(exRules)
+  }
+
   const activeControlCell = (params) => {
-    const handleChange = (event) => {
-      console.log(params.row)
+    const handleChange = () => {
+      updateActiveByIndex(findIndex(params.row.id))
     }
     return <Switch checked={params.row.isActive} onChange={handleChange} />
   }
@@ -44,7 +61,7 @@ function App() {
 
   const handleAddedRule = ({ from, to }) => {
     const existingRules = [...rules]
-    existingRules.push({ id: existingRules.length + 1, from, to, isActive: true })
+    existingRules.push({ id: Date.now(), from, to, isActive: true })
     setRules(existingRules)
   }
 

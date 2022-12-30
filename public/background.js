@@ -1,90 +1,47 @@
-(function () {
-  const tabStorage = {};
-  const networkFilters = {
-    urls: ["http://localhost:4201/*"],
-  };
+;(function () {
+  const networkFilters = { urls: [] }
+  let rules = []
 
-  chrome.runtime.onMessage.addListener(
-    function(request, sender, sendResponse) {
-        console.log(request, sender);
-      console.log(sender.tab ?
-                  "from a content script:" + sender.tab.url :
-                  "from the extension");
-      if (request.type === "request_proxy:control")
-        sendResponse({data: "received"});
+  const listener = (details) => {
+    const matchIndex = findIndex(details.url)
+    if (matchIndex > -1 && rules[matchIndex].isActive) {
+      const redirectUrl = rules[matchIndex].to
+      return { redirectUrl }
     }
-  );
+  }
 
-  chrome.webRequest.onBeforeRequest.addListener((details) => {
-    // const { tabId, requestId } = details;
-    // if (!tabStorage.hasOwnProperty(tabId)) {
-    //   return;
-    // }
+  const handleWebRequest = () => {
+    if (chrome.webRequest.onBeforeRequest.hasListener(listener)) {
+      chrome.webRequest.onBeforeRequest.removeListener(listener)
+    }
+    chrome.webRequest.onBeforeRequest.addListener(listener, networkFilters, ['blocking'])
+  }
 
-    // tabStorage[tabId].requests[requestId] = {
-    //   requestId: requestId,
-    //   url: details.url,
-    //   startTime: details.timeStamp,
-    //   status: "pending",
-    // };
-    
-    const redirectUrl = details.url.replace('4201', '4202');
-    console.log(details, redirectUrl);
-    return {redirectUrl}
-  }, networkFilters, ['blocking']);
+  const updateNetworkFilter = () => {
+    const urls = []
+    rules.forEach((item) => {
+      if (item.isActive) {
+        // const parsedUrl = new URL(item.from)
+        // urls.push(`${parsedUrl.protocol}//${parsedUrl.host}/*`)
+        urls.push(item.from)
+      }
+    })
+    networkFilters.urls = urls
+    handleWebRequest()
+  }
 
-//   chrome.webRequest.onCompleted.addListener((details) => {
-//     const { tabId, requestId } = details;
-//     if (
-//       !tabStorage.hasOwnProperty(tabId) ||
-//       !tabStorage[tabId].requests.hasOwnProperty(requestId)
-//     ) {
-//       return;
-//     }
+  const findIndex = (from) => {
+    return rules.findIndex((x) => x.from === from)
+  }
 
-//     const request = tabStorage[tabId].requests[requestId];
-
-//     Object.assign(request, {
-//       endTime: details.timeStamp,
-//       requestDuration: details.timeStamp - request.startTime,
-//       status: "complete",
-//     });
-//     console.log(tabStorage[tabId].requests[details.requestId]);
-//   }, networkFilters);
-
-//   chrome.webRequest.onErrorOccurred.addListener((details) => {
-//     const { tabId, requestId } = details;
-//     if (
-//       !tabStorage.hasOwnProperty(tabId) ||
-//       !tabStorage[tabId].requests.hasOwnProperty(requestId)
-//     ) {
-//       return;
-//     }
-
-//     const request = tabStorage[tabId].requests[requestId];
-//     Object.assign(request, {
-//       endTime: details.timeStamp,
-//       status: "error",
-//     });
-//     console.log(tabStorage[tabId].requests[requestId]);
-//   }, networkFilters);
-
-//   chrome.tabs.onActivated.addListener((tab) => {
-//     const tabId = tab ? tab.tabId : chrome.tabs.TAB_ID_NONE;
-//     if (!tabStorage.hasOwnProperty(tabId)) {
-//       tabStorage[tabId] = {
-//         id: tabId,
-//         requests: {},
-//         registerTime: new Date().getTime(),
-//       };
-//     }
-//     console.log(tab)
-//   });
-//   chrome.tabs.onRemoved.addListener((tab) => {
-//     const tabId = tab.tabId;
-//     if (!tabStorage.hasOwnProperty(tabId)) {
-//       return;
-//     }
-//     tabStorage[tabId] = null;
-//   });
-})();
+  chrome.runtime.onMessage.addListener(function (request) {
+    switch (request.type) {
+      case 'request_redirect:rules:updated':
+        rules = request.data
+        updateNetworkFilter()
+        break
+      default:
+        break
+    }
+  })
+})()

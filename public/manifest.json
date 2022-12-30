@@ -8,5 +8,5 @@
   "background": {
     "scripts": ["background.js"]
   },
-  "permissions": ["webRequest", "webRequestBlocking", "<all_urls>"]
+  "permissions": ["webRequest", "webRequestBlocking", "storage", "<all_urls>"]
 }
