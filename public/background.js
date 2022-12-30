@@ -14,15 +14,20 @@
     if (chrome.webRequest.onBeforeRequest.hasListener(listener)) {
       chrome.webRequest.onBeforeRequest.removeListener(listener)
     }
-    chrome.webRequest.onBeforeRequest.addListener(listener, networkFilters, ['blocking'])
+
+    if (rules.length > 0) {
+      chrome.webRequest.onBeforeRequest.addListener(listener, networkFilters, ['blocking'])
+    }
+  }
+
+  const saveRules = (rules) => {
+    chrome.storage.local.set({ rules })
   }
 
   const updateNetworkFilter = () => {
     const urls = []
     rules.forEach((item) => {
       if (item.isActive) {
-        // const parsedUrl = new URL(item.from)
-        // urls.push(`${parsedUrl.protocol}//${parsedUrl.host}/*`)
         urls.push(item.from)
       }
     })
@@ -34,14 +39,27 @@
     return rules.findIndex((x) => x.from === from)
   }
 
-  chrome.runtime.onMessage.addListener(function (request) {
-    switch (request.type) {
-      case 'request_redirect:rules:updated':
-        rules = request.data
+  const init = () => {
+    /** Add message listener */
+    chrome.runtime.onMessage.addListener(function (request) {
+      switch (request.type) {
+        case 'request_redirect:rules:updated':
+          rules = request.data
+          saveRules(rules)
+          updateNetworkFilter()
+          break
+        default:
+          break
+      }
+    })
+    /** Check for persistence storage */
+    chrome.storage.local.get('rules', (result) => {
+      if (result && result.rules && result.rules.length > 0) {
+        rules = result.rules
         updateNetworkFilter()
-        break
-      default:
-        break
-    }
-  })
+      }
+    })
+  }
+
+  init()
 })()

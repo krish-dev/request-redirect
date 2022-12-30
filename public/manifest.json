@@ -1,5 +1,5 @@
 {
-  "name": "Resquest Proxy",
+  "name": "Resquest Redirect",
   "manifest_version": 2,
   "version": "0.0.1",
   "browser_action": {
@@ -8,5 +8,10 @@
   "background": {
     "scripts": ["background.js"]
   },
-  "permissions": ["webRequest", "webRequestBlocking", "storage", "<all_urls>"]
+  "permissions": ["webRequest", "webRequestBlocking", "storage", "<all_urls>"],
+  "icons": {
+    "16": "icons/16x16.png",
+    "48": "icons/48x48.png",
+    "128": "icons/128x128.png"
+  }
 }
