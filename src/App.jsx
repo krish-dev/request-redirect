@@ -1,6 +1,9 @@
 import { useEffect } from 'react'
+import { createTheme, ThemeProvider } from '@mui/material/styles'
+import green from '@mui/material/colors/green'
 import Box from '@mui/material/Box'
 import Paper from '@mui/material/Paper'
+import Typography from '@mui/material/Typography'
 import Grid from '@mui/material/Grid'
 import IconButton from '@mui/material/IconButton'
 import DeleteIcon from '@mui/icons-material/Delete'
@@ -11,11 +14,30 @@ import NoRowsOverlay from './components/NoData'
 import AddRule from './components/AddRule'
 import { useLocalStorage } from './hooks/storage'
 
+import Logo from './assets/images/logo.png'
+
 function App() {
+  const theme = createTheme({
+    palette: {
+      primary: green,
+      mode: 'dark',
+    },
+    components: {
+      MuiButton: {
+        styleOverrides: {
+          root: {
+            borderRadius: 28,
+          },
+        },
+      },
+    },
+  })
   const [rules, setRules] = useLocalStorage('rules', [])
 
   useEffect(() => {
-    chrome.runtime.sendMessage({ type: 'request_redirect:rules:updated', data: rules })
+    if (chrome.runtime) {
+      chrome.runtime.sendMessage({ type: 'request_redirect:rules:updated', data: rules })
+    }
   }, [rules])
 
   const findIndex = (id) => {
@@ -66,10 +88,16 @@ function App() {
   }
 
   return (
-    <>
-      <Box sx={{ flexGrow: 1 }} p={2}>
+    <ThemeProvider theme={theme}>
+      <Box sx={{ flexGrow: 1, bgcolor: 'background.default', color: 'text.primary' }} p={2}>
         <Grid container spacing={2}>
-          <Grid item xs={12} container justifyContent="flex-end">
+          <Grid item xs={6} container justifyContent="flex-start">
+            <img src={Logo} alt="" />
+            <Typography ml={1} variant="h6">
+              Request proxy
+            </Typography>
+          </Grid>
+          <Grid item xs={6} container justifyContent="flex-end">
             <AddRule onRuleAdded={handleAddedRule} />
           </Grid>
           <Grid item xs={12}>
@@ -90,7 +118,7 @@ function App() {
           </Grid>
         </Grid>
       </Box>
-    </>
+    </ThemeProvider>
   )
 }
 

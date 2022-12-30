@@ -7,6 +7,9 @@ import Fade from '@mui/material/Fade'
 import Button from '@mui/material/Button'
 import Typography from '@mui/material/Typography'
 import TextField from '@mui/material/TextField'
+import AddIcon from '@mui/icons-material/Add'
+import SaveIcon from '@mui/icons-material/Save'
+
 import { useForm, Controller } from 'react-hook-form'
 
 const AddRule = ({ onRuleAdded }) => {
@@ -16,9 +19,10 @@ const AddRule = ({ onRuleAdded }) => {
     left: '50%',
     transform: 'translate(-50%, -50%)',
     width: 600,
-    bgcolor: 'background.paper',
+    bgcolor: 'background.default',
     boxShadow: 24,
     p: 4,
+    color: 'text.primary',
   }
   /** Modal  handle */
   const [modalOpen, setModalOpen] = useState(false)
@@ -34,7 +38,7 @@ const AddRule = ({ onRuleAdded }) => {
 
   return (
     <>
-      <Button variant="contained" onClick={handleOpen}>
+      <Button variant="contained" onClick={handleOpen} startIcon={<AddIcon />}>
         Add Rule
       </Button>
       <Modal
@@ -52,9 +56,7 @@ const AddRule = ({ onRuleAdded }) => {
           <Box sx={style} component="form" noValidate onSubmit={handleSubmit(onSubmit)}>
             <Grid container spacing={2}>
               <Grid item xs={12}>
-                <Typography id="transition-modal-title" variant="h6" component="h2">
-                  Add redirect rules
-                </Typography>
+                <Typography variant="h6">Add redirect rules</Typography>
               </Grid>
               <Grid item xs={12}>
                 <Controller
@@ -97,7 +99,7 @@ const AddRule = ({ onRuleAdded }) => {
                 />
               </Grid>
               <Grid item xs={12} container justifyContent="flex-end">
-                <Button variant="contained" type="submit">
+                <Button variant="contained" type="submit" startIcon={<SaveIcon />}>
                   Save
                 </Button>
               </Grid>
